@@ -1,0 +1,6 @@
+{
+    "sourcePrincipal": "admin-principal",
+    "requestMethod": "POST",
+    "destinationService": "server.default.cluster.local",
+    "requestUrlPath": "/book/1/chapter/2"
+}

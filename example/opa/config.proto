@@ -20,12 +20,17 @@ package istio.wasm.example.opa;
 import "google/protobuf/duration.proto";
 
 message OpaPluginConfig {
-    // Endpoint of opa server.
-    string opa_endpoint = 1;
+  // Endpoint of opa server.
+  string opa_service_host = 1;
 
-    // Controls whether allow or deny request when opa server is down.
-    bool fail_open = 2;
-    
-    // Controls how long to cache the result from opa server.
-    google.protobuf.Duration tcp_reporting_duration = 3;
+  // Envoy cluster name for opa server.
+  string opa_cluster_name = 2;
+
+  // Controls whether allow or deny request when opa server is down.
+  bool fail_open = 3;
+
+  // Controls how long to cache the result from opa server.
+  // Note this has to be multiples of 5, which is the minimal resolution for
+  // timer.
+  google.protobuf.Duration result_cache_duration = 4;
 }

@@ -1,4 +1,3 @@
-
 # Copyright 2020 Istio Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,18 +17,21 @@
 cc_binary(
     name = "plugin.wasm",
     srcs = [
+        "cache.cc",
+        "cache.h",
         "plugin.cc",
         "plugin.h",
     ],
     additional_linker_inputs = ["@proxy_wasm_cpp_sdk//:jslib"],
     linkopts = [
         "--js-library",
-        "proxy_wasm_intrinsics.js",
+        "external/proxy_wasm_cpp_sdk/proxy_wasm_intrinsics.js",
         "-UHAVE_PTHREAD",
     ],
     deps = [
         ":config_cc_proto",
         ":opa_payload_cc_proto",
+        "@istio_wasm_sdk//istio/extension",
     ],
 )
 
@@ -42,7 +44,6 @@ proto_library(
     name = "opa_payload_proto",
     srcs = ["opa_payload.proto"],
 )
-
 
 cc_proto_library(
     name = "config_cc_proto",
