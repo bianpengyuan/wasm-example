@@ -1,0 +1,13 @@
+/bazel-*
+.idea/*
+docker/envoy
+*.iml
+*.swp
+*.test
+/artifacts
+clang.bazelrc
+user.bazelrc
+compile_commands.json
+build.log
+/.vscode
+istio/test/framework/istio_proxy/*
