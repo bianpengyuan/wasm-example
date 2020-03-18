@@ -14,6 +14,7 @@
  */
 
 #include "example/header_mutation/plugin.h"
+#include "proxy_wasm_intrinsics.pb.h"
 
 #include <google/protobuf/util/json_util.h>
 
@@ -49,10 +50,10 @@ inline void mutateHeader(const HeaderMutationResponse &resp) {
     auto val = getRequestHeader(mutation.first);
     if (val->size() == 0) {
       header_mutated = true;
-      replaceRequestHeader(mutation.first, mutation.second);
+      addRequestHeader(mutation.first, mutation.second);
     } else if (val->toString() != mutation.second) {
       header_mutated = true;
-      addRequestHeader(mutation.first, mutation.second);
+      replaceRequestHeader(mutation.first, mutation.second);
     }
   }
   if (header_mutated) {
@@ -90,8 +91,9 @@ bool HeaderMutationRootContext::onConfigure(size_t /* configuration_size */) {
 
 bool HeaderMutationRootContext::callHeaderMutation(
     const HeaderMutationRequest &req, const uint32_t context_id) {
-  grpcSimpleCall(
-      grpc_service_string_, /* service_name= */
+  auto result = grpcSimpleCall(
+      /* gRPC service proto string = */ grpc_service_string_,
+      /* service_name= */
       "istio.wasm.example.header_mutation.HeaderMutationService",
       /* service_method= */ "GetHeaderMutation", req,
       /* timeout_milliseconds= */ 10000,
@@ -106,11 +108,16 @@ bool HeaderMutationRootContext::callHeaderMutation(
       },
       /* failure_callback= */
       [context_id](GrpcStatus status) {
+        getContext(context_id)->setEffectiveContext();
         LOG_WARN("header mutation api call error: " +
                  std::to_string(static_cast<int>(status)) +
                  getStatus().second->toString());
         continueRequest();
       });
+  if (result != WasmResult::Ok) {
+    return false;
+  }
+  return true;
 }
 
 FilterHeadersStatus HeaderMutationContext::onRequestHeaders(uint32_t) {
@@ -119,7 +126,7 @@ FilterHeadersStatus HeaderMutationContext::onRequestHeaders(uint32_t) {
   auto context_id = id();
   HeaderMutationRequest req;
   req.set_cookie(getRequestHeader("cookie")->toString());
-  if (getRootContext()->callHeaderMutation(req, context_id)) {
+  if (!getRootContext()->callHeaderMutation(req, context_id)) {
     LOG_WARN("failed to call header mutation service");
     return FilterHeadersStatus::Continue;
   }

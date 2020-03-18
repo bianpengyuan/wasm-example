@@ -15,21 +15,22 @@
 package opa
 
 import (
-  	"fmt"
+	"fmt"
 	"testing"
 
 	"github.com/bianpengyuan/istio-wasm-sdk/istio/test/framework"
 )
 
 func TestOPAPluginAllow(t *testing.T) {
-  	var opa OpaServer
+	var opa OpaServer
 	if err := opa.SetupOpaServer("testdata/rule/opa_rule.rego"); err != nil {
 		t.Fatalf("fail to initialize test OPA server: %v", err)
 	}
 	defer opa.TearDownOpaServer(t)
 	ec := getTestEnvoyConfig()
 	framework.NewTest(ec, t).Run(func(ports *framework.Ports) {
-		if code, _, err := framework.HTTPGet(fmt.Sprintf("http://127.0.0.1:%d/echo", ports.AppToClientProxyPort)); err != nil || code != 200 {
+		if code, _, _, err := framework.HTTPGet(fmt.Sprintf("http://127.0.0.1:%d/echo", ports.AppToClientProxyPort),
+			map[string][]string{}); err != nil || code != 200 {
 			t.Errorf("Failed in request: %v or response code is not expected: %v", err, code)
 		}
 	})
@@ -48,4 +49,3 @@ func TestOPAPluginDeny(t *testing.T) {
 		}
 	})
 }
-

@@ -12,8 +12,16 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
+all: build_opa test_opa build_header_mutation test_header_mutation
+
 build_opa:
 	bazel build //example/opa:plugin.wasm
 
 test_opa:
 	bazel build //example/opa:plugin.wasm && go test ./test/opa/... -count=1
+
+build_header_mutation:
+	bazel build //example/header_mutation:plugin.wasm
+
+test_header_mutation:
+	bazel build //example/header_mutation:plugin.wasm && go test ./test/headermutation/... -count=1
