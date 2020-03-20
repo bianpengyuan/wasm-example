@@ -28,12 +28,26 @@ import (
 func TestHeaderMutation(t *testing.T) {
 	ec := getTestEnvoyConfig()
 	go testserver.RunHeaderMutationServer()
+	var headerMutationTests = []struct {
+		userCookie    string
+		versionHeader string
+	}{
+		{"alice", "v1"},
+		{"bob", "v2"},
+	}
 	framework.NewTest(ec, t).Run(func(ports *framework.Ports) {
-		code, header, _, err := framework.HTTPGet(fmt.Sprintf("http://127.0.0.1:%d/echo", ports.AppToClientProxyPort),
-			map[string][]string{"Cookie": []string{"user=alice"}})
-		fmt.Println(header)
-		if err != nil || code != 200 {
-			t.Errorf("Failed in request: %v or response code is not expected: %v", err, code)
+		for _, tt := range headerMutationTests {
+			code, headers, _, err := framework.HTTPGet(fmt.Sprintf("http://127.0.0.1:%d/echo", ports.AppToClientProxyPort),
+				map[string][]string{"Cookie": []string{fmt.Sprintf("user=%v", tt.userCookie)}})
+			if err != nil || code != 200 {
+				t.Errorf("Failed in request: %v or response code is not expected: %v", err, code)
+			}
+			fmt.Println(headers)
+			if val, ok := headers["Version"]; !ok {
+				t.Errorf("cannot find version header")
+			} else if len(val) != 1 || val[0] != tt.versionHeader {
+				t.Errorf("version header got %q, want %q", val, tt.versionHeader)
+			}
 		}
 	})
 }

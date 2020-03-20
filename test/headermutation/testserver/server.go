@@ -45,10 +45,8 @@ func (s *server) GetHeaderMutation(ctx context.Context, in *pb.HeaderMutationReq
 			continue
 		}
 		if c.Value == "alice" {
-			resp.HeaderMutation[":authority"] = "prod"
 			resp.HeaderMutation["version"] = "v1"
 		} else if c.Value == "bob" {
-			resp.HeaderMutation[":authority"] = "canary"
 			resp.HeaderMutation["version"] = "v2"
 		}
 	}
