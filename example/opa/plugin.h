@@ -45,7 +45,9 @@ public:
 
   bool checkCache(const istio::wasm::example::opa::OpaPayload &payload,
                   uint64_t &hash, bool &allowed) {
-    return cache_.check(payload, hash, allowed, getCurrentTimeNanoseconds());
+    bool hit = cache_.check(payload, hash, allowed, getCurrentTimeNanoseconds());
+    incrementMetric((hit ? cache_hits_ : cache_misses_), 1);
+    return hit;
   }
   void addCache(const uint64_t hash, bool result) {
     cache_.add(hash, result, getCurrentTimeNanoseconds());
@@ -54,6 +56,9 @@ public:
 private:
   istio::wasm::example::opa::OpaPluginConfig config_;
   ResultCache cache_;
+
+  uint32_t cache_hits_;
+  uint32_t cache_misses_;
 };
 
 // OpaPluginStreamContext models every HTTP request.

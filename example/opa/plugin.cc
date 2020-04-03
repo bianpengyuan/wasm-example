@@ -74,6 +74,12 @@ bool OpaPluginRootContext::onConfigure(size_t /* configuration_size */) {
     return false;
   }
 
+  Metric cache_count(MetricType::Counter, "policy_cache_count",
+                     {MetricTag{"wasm_filter", MetricTag::TagType::String},
+                      MetricTag{"cache", MetricTag::TagType::String}});
+  cache_hits_ = cache_count.resolve("opa_filter", "hit");
+  cache_misses_ = cache_count.resolve("opa_filter", "miss");
+
   return true;
 }
 
@@ -97,7 +103,7 @@ FilterHeadersStatus OpaPluginStreamContext::onRequestHeaders(uint32_t) {
   }
   if (cache_hit && !allowed) {
     sendLocalResponse(403, "OPA policy check denied", "", {});
-    return FilterHeadersStatus::Continue;
+    return FilterHeadersStatus::StopIteration;
   }
 
   // Convert payload proto to json string and send it to OPA server.
@@ -122,7 +128,7 @@ FilterHeadersStatus OpaPluginStreamContext::onRequestHeaders(uint32_t) {
   auto call_result = root_context->httpCall(
       root_context->opaClusterName(), headers, json_payload, trailers,
       /* timeout_milliseconds= */ 5000,
-      [context_id](uint32_t, size_t body_size, uint32_t) {
+      [this, context_id, payload_hash](uint32_t, size_t body_size, uint32_t) {
         // Callback is triggered inside root context. setEffectiveContext
         // swtich the background context from root context to the current
         // stream context.
@@ -136,6 +142,7 @@ FilterHeadersStatus OpaPluginStreamContext::onRequestHeaders(uint32_t) {
           sendLocalResponse(500, "OPA policy check failed", "", {});
           return;
         }
+        this->getRootContext()->addCache(payload_hash, opa_response.result());
         if (!opa_response.result()) {
           // denied, send direct response.
           sendLocalResponse(403, "OPA policy check denied", "", {});
@@ -148,7 +155,7 @@ FilterHeadersStatus OpaPluginStreamContext::onRequestHeaders(uint32_t) {
   if (call_result != WasmResult::Ok) {
     LOG_WARN("cannot make call to OPA policy server");
     sendLocalResponse(500, "OPA policy check failed", "", {});
-    return FilterHeadersStatus::Continue;
+    return FilterHeadersStatus::StopIteration;
   }
 
   return FilterHeadersStatus::StopIteration;

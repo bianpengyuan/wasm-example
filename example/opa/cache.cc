@@ -14,8 +14,9 @@
  */
 
 #include "example/opa/cache.h"
+#include "istio/extension/extension.h"
 
-const uint64_t DEFAULT_EXPIRATION = 60000000000; // nanoseconds = 60s
+const uint64_t DEFAULT_EXPIRATION = 10000000000; // nanoseconds = 10s
 const uint64_t MAX_NUM_ENTRY = 1000;
 
 namespace Opa {
@@ -42,6 +43,7 @@ bool ResultCache::check(const istio::wasm::example::opa::OpaPayload &param,
     return false;
   }
   const auto &entry = iter->second;
+  LOG_INFO("111111111 " + std::to_string(entry.second) + " " + std::to_string(DEFAULT_EXPIRATION) + " " + std::to_string(timestamp));
   if (entry.second + DEFAULT_EXPIRATION > timestamp) {
     use(hash);
     allowed = entry.first;

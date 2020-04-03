@@ -1,0 +1,17 @@
+name: envoy_policy_cache_count
+type: COUNTER
+metric:
+- counter:
+    value: {{ .Vars.CacheHit }}
+  label:
+  - name: cache
+    value: hit
+  - name: wasm_filter
+    value: opa_filter
+- counter:
+    value: {{ .Vars.CacheMiss }}
+  label:
+  - name: cache
+    value: miss
+  - name: wasm_filter
+    value: opa_filter
