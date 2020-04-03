@@ -18,7 +18,6 @@
 
 #include <google/protobuf/util/json_util.h>
 
-// TODO: avoid using protobuf.
 using google::protobuf::util::JsonParseOptions;
 using google::protobuf::util::MessageToJsonString;
 using google::protobuf::util::Status;
@@ -66,13 +65,6 @@ inline void mutateHeader(const HeaderMutationResponse &resp) {
 namespace HeaderMutation {
 
 bool HeaderMutationRootContext::onStart(size_t) { return true; }
-
-bool HeaderMutationRootContext::validateConfiguration(
-    size_t /* configuration_size */) {
-  // Try parsing the configuration.
-  HeaderMutationPluginConfig unused_config;
-  return unmarshalConfig(&unused_config);
-}
 
 bool HeaderMutationRootContext::onConfigure(size_t /* configuration_size */) {
   if (!unmarshalConfig(&config_)) {
@@ -125,7 +117,11 @@ FilterHeadersStatus HeaderMutationContext::onRequestHeaders(uint32_t) {
   // Get id of current context, which will be used in http callback.
   auto context_id = id();
   HeaderMutationRequest req;
-  req.set_cookie(getRequestHeader("cookie")->toString());
+  auto cookie_header = getRequestHeader("cookie")->toString();
+  if (cookie_header.empty()) {
+    cookie_header = "unknown";
+  }
+  req.set_cookie(cookie_header);
   if (!getRootContext()->callHeaderMutation(req, context_id)) {
     LOG_WARN("failed to call header mutation service");
     return FilterHeadersStatus::Continue;

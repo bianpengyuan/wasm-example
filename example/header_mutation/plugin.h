@@ -32,7 +32,6 @@ public:
       : ExtensionRootContext(id, root_id) {}
 
   bool onStart(size_t /* vm_configuration_size */) override;
-  bool validateConfiguration(size_t /* configuration_size */) override;
   bool onConfigure(size_t /* configuration_size */) override;
 
   bool callHeaderMutation(

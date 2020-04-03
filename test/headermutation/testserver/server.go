@@ -17,24 +17,47 @@ package testserver
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 
+	"github.com/bianpengyuan/istio-wasm-sdk/istio/test/framework"
 	pb "github.com/bianpengyuan/wasm-example/test/headermutation/testserver/proto"
 	"google.golang.org/grpc"
+	"istio.io/pkg/log"
 )
 
-const (
-	port = ":50051"
-)
+type Server struct {
+	Port uint16
+	s    *grpc.Server
+}
 
-type server struct {
-	s *grpc.Server
+var _ framework.Step = &Server{}
+
+func (srv *Server) runHeaderMutationServer() {
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", srv.Port))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	fmt.Printf("start listening on %v \n", srv.Port)
+	srv.s = grpc.NewServer()
+	pb.RegisterHeaderMutationServiceServer(srv.s, srv)
+	if err := srv.s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
+func (srv *Server) Run(p *framework.Params) error {
+	go srv.runHeaderMutationServer()
+	return nil
+}
+
+func (srv *Server) Cleanup() {
+	srv.s.Stop()
 }
 
 // GetHeaderMutation implements header mutation service
-func (s *server) GetHeaderMutation(ctx context.Context, in *pb.HeaderMutationRequest) (*pb.HeaderMutationResponse, error) {
+func (srv *Server) GetHeaderMutation(ctx context.Context, in *pb.HeaderMutationRequest) (*pb.HeaderMutationResponse, error) {
+	fmt.Println("received get header mutation requests")
 	header := http.Header{}
 	header.Add("Cookie", in.GetCookie())
 	request := http.Request{Header: header}
@@ -51,23 +74,4 @@ func (s *server) GetHeaderMutation(ctx context.Context, in *pb.HeaderMutationReq
 		}
 	}
 	return &resp, nil
-}
-
-// RunHeaderMutationServer initilizes a header mutation server.
-func RunHeaderMutationServer() {
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	fmt.Printf("start listening on %v \n", port)
-	s := grpc.NewServer()
-	pb.RegisterHeaderMutationServiceServer(s, &server{})
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
-}
-
-// TearDownHeaderMutationServer initilizes a header mutation server.
-func TearDownHeaderMutationServer() {
-	// TODO
 }

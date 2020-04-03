@@ -16,60 +16,65 @@ package headermutation
 
 import (
 	"fmt"
+	"net/http"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/bianpengyuan/istio-wasm-sdk/istio/test/framework"
 	"github.com/bianpengyuan/wasm-example/test/headermutation/testserver"
 )
 
 func TestHeaderMutation(t *testing.T) {
-	ec := getTestEnvoyConfig()
-	go testserver.RunHeaderMutationServer()
 	var headerMutationTests = []struct {
+		name          string
 		userCookie    string
 		versionHeader string
 	}{
-		{"alice", "v1"},
-		{"bob", "v2"},
+		{"v1", "alice", "v1"},
+		{"v2", "bob", "v2"},
+		{"empty", "", ""},
 	}
-	framework.NewTest(ec, t).Run(func(ports *framework.Ports) {
-		for _, tt := range headerMutationTests {
-			code, headers, _, err := framework.HTTPGet(fmt.Sprintf("http://127.0.0.1:%d/echo", ports.AppToClientProxyPort),
-				map[string][]string{"Cookie": []string{fmt.Sprintf("user=%v", tt.userCookie)}})
-			if err != nil || code != 200 {
-				t.Errorf("Failed in request: %v or response code is not expected: %v", err, code)
-			}
-			fmt.Println(headers)
-			if val, ok := headers["Version"]; !ok {
-				t.Errorf("cannot find version header")
-			} else if len(val) != 1 || val[0] != tt.versionHeader {
-				t.Errorf("version header got %q, want %q", val, tt.versionHeader)
-			}
-		}
-	})
-}
+	for _, tt := range headerMutationTests {
+		t.Run(tt.name, func(t *testing.T) {
+			params, err := framework.NewTestParams(map[string]string{})
 
-func getTestEnvoyConfig() framework.TestEnvoyConfig {
-	var config framework.TestEnvoyConfig
-	// Inject server side filter which
-	headerMutationFilter := `- name: envoy.filters.http.wasm
-  config:
-    config:
-      vm_config:
-        vm_id: "header_mutation_vm"
-        runtime: "envoy.wasm.runtime.v8"
-        code:
-          local: { filename: %v }
-      configuration: >-
-        {
-          "header_mutation_service": "127.0.0.1:50051",
-        }`
-	config.FiltersBeforeEnvoyRouterInProxyToServer = fmt.Sprintf(headerMutationFilter, getHeaderMutationPluginWasm())
+			grpcPort := params.Ports.Max + 1
+			params.Vars["ServerHTTPFilters"] = fmt.Sprintf(
+				framework.LoadTestData("test/headermutation/testdata/resource/grpc_filter.yaml.tmpl"),
+				getHeaderMutationPluginWasm(), strconv.Itoa(int(grpcPort)))
+			if err != nil {
+				t.Fatalf("failed to initialize test params: %v", err)
+			}
 
-	return config
+			var reqHeaders, respHeaders http.Header
+			if tt.userCookie != "" {
+				reqHeaders = http.Header{"Cookie": []string{fmt.Sprintf("user=%v", tt.userCookie)}}
+			}
+			if tt.versionHeader != "" {
+				respHeaders = http.Header{"Version": []string{tt.versionHeader}}
+			}
+			if err := (&framework.Scenario{
+				Steps: []framework.Step{
+					&framework.XDS{},
+					&testserver.Server{Port: grpcPort},
+					&framework.ClientServerEnvoy{},
+					&framework.Sleep{Duration: 3 * time.Second},
+					&framework.HTTPClient{
+						Op:              framework.GET,
+						URL:             fmt.Sprintf("http://127.0.0.1:%d/echo", params.Ports.ClientPort),
+						ReqHeaders:      reqHeaders,
+						WantRespCode:    200,
+						WantRespHeaders: respHeaders,
+					},
+				}}).Run(params); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
 }
 
 func getHeaderMutationPluginWasm() string {

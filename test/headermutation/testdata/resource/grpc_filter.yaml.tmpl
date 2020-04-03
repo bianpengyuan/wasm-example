@@ -1,0 +1,15 @@
+- name: envoy.filters.http.wasm
+  typed_config:
+    "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+    type_url: envoy.extensions.filters.http.wasm.v3.Wasm
+    value:
+      config:
+        vm_config:
+          vm_id: "header_mutation_vm"
+          runtime: "envoy.wasm.runtime.v8"
+          code:
+            local: { filename: %v }
+        configuration: >-
+          {
+            "header_mutation_service": "127.0.0.1:%v",
+          }
