@@ -19,8 +19,8 @@
 
 #include "istio/extension/extension.h"
 
-#include "example/header_mutation/config.pb.h"
-#include "example/header_mutation/header_mutation.pb.h"
+#include "example/grpc/config.pb.h"
+#include "example/grpc/header_mutation.pb.h"
 
 namespace HeaderMutation {
 

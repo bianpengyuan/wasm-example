@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "example/header_mutation/plugin.h"
+#include "example/grpc/plugin.h"
 #include "proxy_wasm_intrinsics.pb.h"
 
 #include <google/protobuf/util/json_util.h>

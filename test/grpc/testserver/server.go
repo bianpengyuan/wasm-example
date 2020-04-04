@@ -21,7 +21,7 @@ import (
 	"net/http"
 
 	"github.com/bianpengyuan/istio-wasm-sdk/istio/test/framework"
-	pb "github.com/bianpengyuan/wasm-example/test/headermutation/testserver/proto"
+	pb "github.com/bianpengyuan/wasm-example/test/grpc/testserver/proto"
 	"google.golang.org/grpc"
 	"istio.io/pkg/log"
 )

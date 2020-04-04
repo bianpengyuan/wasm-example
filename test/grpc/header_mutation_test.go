@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package headermutation
+package grpc
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/bianpengyuan/istio-wasm-sdk/istio/test/framework"
-	"github.com/bianpengyuan/wasm-example/test/headermutation/testserver"
+	"github.com/bianpengyuan/wasm-example/test/grpc/testserver"
 )
 
 func TestHeaderMutation(t *testing.T) {
@@ -44,7 +44,7 @@ func TestHeaderMutation(t *testing.T) {
 
 			grpcPort := params.Ports.Max + 1
 			params.Vars["ServerHTTPFilters"] = fmt.Sprintf(
-				framework.LoadTestData("test/headermutation/testdata/resource/grpc_filter.yaml.tmpl"),
+				framework.LoadTestData("test/grpc/testdata/resource/grpc_filter.yaml.tmpl"),
 				getHeaderMutationPluginWasm(), strconv.Itoa(int(grpcPort)))
 			if err != nil {
 				t.Fatalf("failed to initialize test params: %v", err)
@@ -79,5 +79,5 @@ func TestHeaderMutation(t *testing.T) {
 
 func getHeaderMutationPluginWasm() string {
 	workspace, _ := exec.Command("bazel", "info", "workspace").Output()
-	return filepath.Join(strings.TrimSuffix(string(workspace), "\n"), "bazel-bin/example/header_mutation/plugin.wasm")
+	return filepath.Join(strings.TrimSuffix(string(workspace), "\n"), "bazel-bin/example/grpc/plugin.wasm")
 }
