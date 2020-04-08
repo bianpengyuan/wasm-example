@@ -19,10 +19,8 @@ import (
 	"net/http"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/bianpengyuan/istio-wasm-sdk/istio/test/framework"
 	"github.com/bianpengyuan/wasm-example/test/grpc/testserver"
@@ -40,15 +38,14 @@ func TestHeaderMutation(t *testing.T) {
 	}
 	for _, tt := range headerMutationTests {
 		t.Run(tt.name, func(t *testing.T) {
-			params, err := framework.NewTestParams(map[string]string{})
-
-			grpcPort := params.Ports.Max + 1
-			params.Vars["ServerHTTPFilters"] = fmt.Sprintf(
-				framework.LoadTestData("test/grpc/testdata/resource/grpc_filter.yaml.tmpl"),
-				getHeaderMutationPluginWasm(), strconv.Itoa(int(grpcPort)))
+			params, err := framework.NewTestParams(map[string]string{
+				"GrpcFilterPluginFilePath": getHeaderMutationPluginWasm(),
+			})
 			if err != nil {
 				t.Fatalf("failed to initialize test params: %v", err)
 			}
+
+			params.Vars["ServerHTTPFilters"] = params.LoadTestData("test/grpc/testdata/grpc_filter.yaml.tmpl")
 
 			var reqHeaders, respHeaders http.Header
 			if tt.userCookie != "" {
@@ -60,9 +57,8 @@ func TestHeaderMutation(t *testing.T) {
 			if err := (&framework.Scenario{
 				Steps: []framework.Step{
 					&framework.XDS{},
-					&testserver.Server{Port: grpcPort},
+					&testserver.Server{Port: params.Ports.Max + 1},
 					&framework.ClientServerEnvoy{},
-					&framework.Sleep{Duration: 3 * time.Second},
 					&framework.HTTPClient{
 						Op:              framework.GET,
 						URL:             fmt.Sprintf("http://127.0.0.1:%d/echo", params.Ports.ClientPort),

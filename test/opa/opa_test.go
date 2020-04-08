@@ -46,11 +46,12 @@ func TestOPAPlugin(t *testing.T) {
 			params, err := framework.NewTestParams(map[string]string{
 				"ClientTLSContext":    framework.LoadTestData("test/opa/testdata/transport_socket/client_tls_context.yaml.tmpl"),
 				"ServerTLSContext":    framework.LoadTestData("test/opa/testdata/transport_socket/server_tls_context.yaml.tmpl"),
-				"ServerHTTPFilters":   fmt.Sprintf(framework.LoadTestData("test/opa/testdata/resource/opa_filter.yaml.tmpl"), getOpaPluginWasm()),
 				"ServerStaticCluster": framework.LoadTestData("test/opa/testdata/resource/opa_cluster.yaml.tmpl"),
+				"OpaPluginFilePath":   getOpaPluginWasm(),
 				"CacheHit":            strconv.Itoa(tt.cacheHit),
 				"CacheMiss":           strconv.Itoa(tt.cacheMiss),
 			})
+			params.Vars["ServerHTTPFilters"] = params.LoadTestData("test/opa/testdata/resource/opa_filter.yaml.tmpl")
 			if err != nil {
 				t.Fatalf("failed to initialize test params: %v", err)
 			}
@@ -60,7 +61,6 @@ func TestOPAPlugin(t *testing.T) {
 					&framework.XDS{},
 					&opa.OpaServer{RuleFilePath: "testdata/rule/opa_rule.rego"},
 					&framework.ClientServerEnvoy{},
-					&framework.Sleep{Duration: 3 * time.Second},
 					&framework.Repeat{
 						N: tt.requestCount,
 						Step: &framework.Scenario{
@@ -90,11 +90,12 @@ func TestOPAPluginReload(t *testing.T) {
 	params, err := framework.NewTestParams(map[string]string{
 		"ClientTLSContext":    framework.LoadTestData("test/opa/testdata/transport_socket/client_tls_context.yaml.tmpl"),
 		"ServerTLSContext":    framework.LoadTestData("test/opa/testdata/transport_socket/server_tls_context.yaml.tmpl"),
-		"ServerHTTPFilters":   fmt.Sprintf(framework.LoadTestData("test/opa/testdata/resource/opa_filter.yaml.tmpl"), getOpaPluginWasm()),
+		"OpaPluginFilePath":   getOpaPluginWasm(),
 		"ServerStaticCluster": framework.LoadTestData("test/opa/testdata/resource/opa_cluster.yaml.tmpl"),
 		"CacheHit":            strconv.Itoa(19),
 		"CacheMiss":           strconv.Itoa(1),
 	})
+	params.Vars["ServerHTTPFilters"] = params.LoadTestData("test/opa/testdata/resource/opa_filter.yaml.tmpl")
 	if err != nil {
 		t.Fatalf("failed to initialize test params: %v", err)
 	}

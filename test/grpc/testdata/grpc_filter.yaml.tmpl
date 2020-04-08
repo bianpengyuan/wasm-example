@@ -8,8 +8,8 @@
           vm_id: "header_mutation_vm"
           runtime: "envoy.wasm.runtime.v8"
           code:
-            local: { filename: %v }
+            local: { filename: {{ .Vars.GrpcFilterPluginFilePath }} }
         configuration: >-
           {
-            "header_mutation_service": "127.0.0.1:%v",
+            "header_mutation_service": "127.0.0.1:{{ increment .Ports.Max 1 }}",
           }

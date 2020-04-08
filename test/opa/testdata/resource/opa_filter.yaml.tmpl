@@ -8,10 +8,10 @@
           vm_id: "opa_vm"
           runtime: "envoy.wasm.runtime.v8"
           code:
-            local: { filename: %v }
+            local: { filename: {{ .Vars.OpaPluginFilePath }} }
         configuration: >-
           {
             "opa_cluster_name": "opa_policy_server",
-            "opa_service_host": "127.0.0.1:8181",
+            "opa_service_host": "localhost:8181",
             "fail_open": "false",
           }

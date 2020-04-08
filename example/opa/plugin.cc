@@ -89,11 +89,11 @@ FilterHeadersStatus OpaPluginStreamContext::onRequestHeaders(uint32_t) {
 
   // Fill in payload proto.
   auto input = payload.mutable_input();
-  auto source_principal = sourcePrincipal();
-  input->set_source_principal(source_principal);
-  input->set_destination_service(destinationServiceHost());
-  input->set_request_operation(requestOperation());
-  input->set_request_url_path(urlPath());
+  sourcePrincipal(input->mutable_source_principal());
+  std::string unused_dst_svc;
+  destinationService(input->mutable_destination_service(), &unused_dst_svc);
+  getValue({"request", "method"}, input->mutable_request_operation());
+  getValue({"request", "url_path"}, input->mutable_request_url_path());
 
   uint64_t payload_hash = 0;
   bool allowed = false;

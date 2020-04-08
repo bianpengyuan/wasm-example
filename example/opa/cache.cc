@@ -43,7 +43,6 @@ bool ResultCache::check(const istio::wasm::example::opa::OpaPayload &param,
     return false;
   }
   const auto &entry = iter->second;
-  LOG_INFO("111111111 " + std::to_string(entry.second) + " " + std::to_string(DEFAULT_EXPIRATION) + " " + std::to_string(timestamp));
   if (entry.second + DEFAULT_EXPIRATION > timestamp) {
     use(hash);
     allowed = entry.first;
