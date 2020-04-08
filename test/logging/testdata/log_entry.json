@@ -1,0 +1,8 @@
+{
+    "source_name":"productpage-v1-84975bc778-pxz2w",
+    "source_namespace":"default",
+    "source_workload":"productpage-v1",
+    "destination_name":"productpage-v1-84975bc778-pxz2w",
+    "destination_namespace":"default",
+    "destination_workload":"productpage-v1"
+}

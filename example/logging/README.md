@@ -1,1 +1,0 @@
-https://docs.fluentd.org/input/http#tips-&-tricks

@@ -1,0 +1,16 @@
+- name: envoy.filters.http.wasm
+  typed_config:
+    "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+    type_url: envoy.extensions.filters.http.wasm.v3.Wasm
+    value:
+      config:
+        vm_config:
+          vm_id: "header_mutation_vm"
+          runtime: "envoy.wasm.runtime.v8"
+          code:
+            local: { filename: {{ .Vars.LoggingPluginFilePath }} }
+        configuration: >-
+          {
+             "logging_service_cluster": "logging_server",
+             "logging_service_host": "localhost:{{ increment .Ports.Max 1 }}"
+          }

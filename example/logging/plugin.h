@@ -23,32 +23,39 @@
 
 namespace Logging {
 
-class LoggingContext;
+class LoggingStreamContext;
 
-// LoggingRootContext models a VM wide context.
-class LoggingRootContext
-    : public Istio::Extension::ExtensionRootContext {
+class LoggingRootContext : public Istio::Extension::ExtensionRootContext {
 public:
-  LoggingRootContext(uint32_t id, StringView root_id)
-      : ExtensionRootContext(id, root_id) {
-    log_writer_.Reset(log_buffer_);
-  }
+  LoggingRootContext(uint32_t id, StringView root_id);
+
+  void onTick() override;
 
   bool onStart(size_t /* vm_configuration_size */) override;
   bool onConfigure(size_t /* configuration_size */) override;
+  bool onDone() override;
 
-  void addLogEntry(LoggingContext* stream_context);
+  void addLogEntry(LoggingStreamContext *stream_context);
+  void flushLogBuffer();
+  void sendLogRequest(bool ondone);
 
 private:
-  std::string logging_service_;
-  rapidjson::StringBuffer log_buffer_;
+  std::string logging_service_cluster_;
+  std::string logging_service_host_;
+  std::unique_ptr<rapidjson::StringBuffer> log_buffer_;
+
+  int log_entry_count_;
   rapidjson::Writer<rapidjson::StringBuffer> log_writer_;
+
+  // Buffers requests to be sent.
+  std::vector<std::unique_ptr<rapidjson::StringBuffer>> req_buffer_;
+
+  int in_flight_ondone_ = 0;
 };
 
-// LoggingContext models every HTTP request stream.
-class LoggingContext : public Istio::Extension::ExtensionStreamContext {
+class LoggingStreamContext : public Istio::Extension::ExtensionStreamContext {
 public:
-  LoggingContext(uint32_t id, ::RootContext *root)
+  LoggingStreamContext(uint32_t id, ::RootContext *root)
       : ExtensionStreamContext(id, root) {}
 
   void onLog() override;
@@ -62,6 +69,6 @@ private:
 
 } // namespace Logging
 
-static RegisterContextFactory register_LoggingContext(
-    CONTEXT_FACTORY(Logging::LoggingContext),
-    ROOT_FACTORY(Logging::LoggingRootContext));
+static RegisterContextFactory
+    register_LoggingStreamContext(CONTEXT_FACTORY(Logging::LoggingStreamContext),
+                            ROOT_FACTORY(Logging::LoggingRootContext));
