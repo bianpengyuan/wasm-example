@@ -27,6 +27,8 @@ github.com/bianpengyuan/istio-wasm-sdk v0.0.0-20200318203618-a66b0afd5230 h1:c4x
 github.com/bianpengyuan/istio-wasm-sdk v0.0.0-20200318203618-a66b0afd5230/go.mod h1:TdLBDVxX+lU3Zy+7ngyeqXTkhHDeQki+tGSJRMz9hck=
 github.com/bianpengyuan/istio-wasm-sdk v0.0.0-20200403033522-15a8cdec35ae h1:fkDEtzfSdynd/uw2IHsDod5MtQ972FHFN0DfXf4zfbA=
 github.com/bianpengyuan/istio-wasm-sdk v0.0.0-20200403033522-15a8cdec35ae/go.mod h1:VxuFfZejVZT6V1XJvXW45rkFPEOysv3EBZnSG17qlBk=
+github.com/bianpengyuan/istio-wasm-sdk v0.0.0-20200412041507-d2b3614714ae h1:wD/g37Fy87JtcXw0YV74NfKLThykwSzdSB9+rJdu8DU=
+github.com/bianpengyuan/istio-wasm-sdk v0.0.0-20200412041507-d2b3614714ae/go.mod h1:VxuFfZejVZT6V1XJvXW45rkFPEOysv3EBZnSG17qlBk=
 github.com/census-instrumentation/opencensus-proto v0.2.1 h1:glEXhBS5PSLLv4IXzLA5yPRVX4bilULVyxxbrfOtDAk=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=

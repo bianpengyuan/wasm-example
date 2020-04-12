@@ -4,8 +4,8 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "istio_wasm_sdk",
-    strip_prefix = "istio-wasm-sdk-15a8cdec35ae036ffdde3012522334fb3d52fc77",
-    url = "https://github.com/bianpengyuan/istio-wasm-sdk/archive/15a8cdec35ae036ffdde3012522334fb3d52fc77.tar.gz",
+    strip_prefix = "istio-wasm-sdk-d2b3614714ae829cdbbcdb2e5fc60d0b010ec862",
+    url = "https://github.com/bianpengyuan/istio-wasm-sdk/archive/d2b3614714ae829cdbbcdb2e5fc60d0b010ec862.tar.gz",
 )
 
 load("@istio_wasm_sdk//bazel:sdk_dependencies.bzl", "sdk_dependencies")
