@@ -57,7 +57,6 @@ func (srv *Server) Cleanup() {
 
 // GetHeaderMutation implements header mutation service
 func (srv *Server) GetHeaderMutation(ctx context.Context, in *pb.HeaderMutationRequest) (*pb.HeaderMutationResponse, error) {
-	fmt.Println("received get header mutation requests")
 	header := http.Header{}
 	header.Add("Cookie", in.GetCookie())
 	request := http.Request{Header: header}

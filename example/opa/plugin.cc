@@ -89,7 +89,7 @@ FilterHeadersStatus OpaPluginStreamContext::onRequestHeaders(uint32_t) {
 
   // Fill in payload proto.
   auto input = payload.mutable_input();
-  sourcePrincipal(input->mutable_source_principal());
+  *input->mutable_source_principal() = sourcePrincipal();
   std::string unused_dst_svc;
   destinationService(input->mutable_destination_service(), &unused_dst_svc);
   getValue({"request", "method"}, input->mutable_request_operation());
@@ -114,6 +114,7 @@ FilterHeadersStatus OpaPluginStreamContext::onRequestHeaders(uint32_t) {
     sendLocalResponse(500, "OPA policy check failed", "", {});
     return FilterHeadersStatus::StopIteration;
   }
+  LOG_INFO("!!!!!!!!!!!!!! json payload is " + json_payload);
 
   // Construct http call to OPA server.
   HeaderStringPairs headers;
@@ -136,6 +137,7 @@ FilterHeadersStatus OpaPluginStreamContext::onRequestHeaders(uint32_t) {
         auto body =
             getBufferBytes(BufferType::HttpCallResponseBody, 0, body_size);
         istio::wasm::example::opa::OpaResponse opa_response;
+        LOG_INFO("!!!!!!!!!!!!!! body is " + body->toString());
         if (!unmarshalOpaResponse(body->toString(), &opa_response)) {
           // direct response.
           LOG_WARN("cannot unmarshal OPA response");

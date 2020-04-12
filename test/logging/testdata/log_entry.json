@@ -1,8 +1,16 @@
 {
-    "source_name":"productpage-v1-84975bc778-pxz2w",
-    "source_namespace":"default",
-    "source_workload":"productpage-v1",
-    "destination_name":"productpage-v1-84975bc778-pxz2w",
-    "destination_namespace":"default",
-    "destination_workload":"productpage-v1"
+    "source_name": "productpage-v1-84975bc778-pxz2w",
+    "source_namespace": "default",
+    "source_workload": "productpage-v1",
+    "destination_name": "productpage-v1-84975bc778-pxz2w",
+    "destination_namespace": "default",
+    "destination_workload": "productpage-v1",
+    "response_flag": "-",
+    "url_path": "/echo",
+    "destination_service_name": "server",
+    "destination_service_host": "server.default.svc.cluster.local",
+    "response_code": 200,
+    "request_protocol": "http",
+    "url_host": "127.0.0.1:{{ .Ports.ClientPort }}",
+    "destination_address": "127.0.0.1:{{ .Ports.ServerPort }}"
 }

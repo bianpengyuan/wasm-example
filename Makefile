@@ -12,22 +12,27 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-all: build_opa test_opa build_grpc test_grpc
+.PHONY: test
+
+build: build_opa build_grpc build_logging
+
+test:
+	go test ./... -p 1
 
 build_opa:
 	bazel build //example/opa:plugin.wasm
 
 test_opa:
-	bazel build //example/opa:plugin.wasm && go test -v ./test/opa/... -count=1
+	go test ./test/opa/... -p 1
 
 build_grpc:
 	bazel build //example/grpc:plugin.wasm
 
 test_grpc:
-	bazel build //example/grpc:plugin.wasm && go test -v ./test/grpc/... -count=1
+	go test ./test/grpc/... -p 1
 
 build_logging:
 	bazel build //example/logging:plugin.wasm
 
 test_logging:
-	bazel build //example/logging:plugin.wasm && go test -v ./test/logging/... -count=1
+	go test ./test/logging/... -p 1

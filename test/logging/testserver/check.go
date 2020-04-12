@@ -18,28 +18,33 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
 	"reflect"
-	"runtime"
 	"time"
 
 	"github.com/bianpengyuan/istio-wasm-sdk/istio/test/framework"
 )
 
 type LogEntry struct {
-	SourceName           string `json:"source_name"`
-	SourceNamespace      string `json:"source_namespace"`
-	SourceWorkload       string `json:"source_workload"`
-	DestinationName      string `json:"destination_name"`
-	DestinationNamespace string `json:"destination_namespace"`
-	DestinationWorkload  string `json:"destination_workload"`
+	SourceName             string `json:"source_name"`
+	SourceNamespace        string `json:"source_namespace"`
+	SourceWorkload         string `json:"source_workload"`
+	DestinationName        string `json:"destination_name"`
+	DestinationNamespace   string `json:"destination_namespace"`
+	DestinationWorkload    string `json:"destination_workload"`
+	ResponseFlag           string `json:"response_flag"`
+	URLPath                string `json:"url_path"`
+	DestinationServiceName string `json:"destination_service_name"`
+	DestinationServiceHost string `json:"destination_service_host"`
+	ResponseCode           int    `json:"response_code"`
+	RequestProtocol        string `json:"request_protocol"`
+	URLHost                string `json:"url_host"`
+	DestinationAddress     string `json:"destination_address"`
 }
 
 type CheckLog struct {
-	N int
-	S *LoggingServer
+	N       int
+	S       *LoggingServer
+	Timeout time.Duration
 }
 
 var _ framework.Step = &CheckLog{}
@@ -47,10 +52,11 @@ var _ framework.Step = &CheckLog{}
 func (c *CheckLog) Run(p *framework.Params) error {
 	select {
 	case req := <-c.S.Req:
-		if err := verifyLogEntry(req, c.N); err != nil {
+		fmt.Println(req)
+		if err := verifyLogEntry(p, req, c.N); err != nil {
 			return err
 		}
-	case <-time.After(15 * time.Second):
+	case <-time.After(c.Timeout):
 		return errors.New("timeout waiting for log entry")
 	}
 	return nil
@@ -58,39 +64,28 @@ func (c *CheckLog) Run(p *framework.Params) error {
 
 func (c *CheckLog) Cleanup() {}
 
-func verifyLogEntry(got string, n int) error {
-	var gotLogEntries []*LogEntry
+func verifyLogEntry(p *framework.Params, got string, n int) error {
+	var gotLogEntries []LogEntry
 	if err := json.Unmarshal([]byte(got), &gotLogEntries); err != nil {
 		return err
 	}
-	wantedLogs, err := loadExpectedLogEntries(n)
+	wantLogEntries, err := loadExpectedLogEntries(p, n)
 	if err != nil {
 		return err
 	}
-	if !reflect.DeepEqual(wantedLogs, gotLogEntries) {
-		return fmt.Errorf("got %v, but want %v", gotLogEntries, wantedLogs)
+	if !reflect.DeepEqual(wantLogEntries, gotLogEntries) {
+		return fmt.Errorf("got %+v, but want %+v", gotLogEntries, wantLogEntries)
 	}
 	return nil
 }
 
-func loadExpectedLogEntries(n int) ([]*LogEntry, error) {
-	_, filename, _, ok := runtime.Caller(1)
-	if !ok {
-		return []*LogEntry{}, errors.New("failed to find log entry json file")
-	}
-	filepath := path.Join(path.Dir(filename), "../testdata/log_entry.json")
-	logEntryFile, err := os.Open(filepath)
-	if err != nil {
-		return []*LogEntry{}, err
-	}
-	defer logEntryFile.Close()
-
-	logBytes, _ := ioutil.ReadAll(logEntryFile)
+func loadExpectedLogEntries(p *framework.Params, n int) ([]LogEntry, error) {
+	logBytes := p.LoadTestData("test/logging/testdata/log_entry.json")
 	var le LogEntry
-	json.Unmarshal(logBytes, &le)
-	var logEntries []*LogEntry
+	json.Unmarshal([]byte(logBytes), &le)
+	var logEntries []LogEntry
 	for i := 1; i <= n; i++ {
-		logEntries = append(logEntries, &le)
+		logEntries = append(logEntries, le)
 	}
 	return logEntries, nil
 }

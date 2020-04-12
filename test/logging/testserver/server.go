@@ -33,8 +33,9 @@ var _ framework.Step = &LoggingServer{}
 func (l *LoggingServer) Run(p *framework.Params) error {
 	l.Req = make(chan string, 10)
 	go func() {
-		http.HandleFunc("/", l.handler)
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", l.Port), nil))
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", l.handler)
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", l.Port), mux))
 	}()
 	return nil
 }

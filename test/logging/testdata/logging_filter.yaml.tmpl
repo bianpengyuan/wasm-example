@@ -5,7 +5,7 @@
     value:
       config:
         vm_config:
-          vm_id: "header_mutation_vm"
+          vm_id: "logging_vm{{ .Vars.VMNameSuffix }}"
           runtime: "envoy.wasm.runtime.v8"
           code:
             local: { filename: {{ .Vars.LoggingPluginFilePath }} }

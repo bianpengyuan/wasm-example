@@ -44,6 +44,12 @@ void addNumericLabel(rapidjson::Writer<rapidjson::StringBuffer> &writer,
   writer.Double(val);
 }
 
+void addIntegerLabel(rapidjson::Writer<rapidjson::StringBuffer> &writer,
+                     const std::string &key, int64_t val) {
+  writer.Key(key.c_str(), key.length(), true);
+  writer.Int64(val);
+}
+
 } // namespace
 
 LoggingRootContext::LoggingRootContext(uint32_t id, StringView root_id)
@@ -82,12 +88,12 @@ bool LoggingRootContext::onConfigure(size_t /* configuration_size */) {
 
 bool LoggingRootContext::onDone() {
   if (req_buffer_.empty() && log_entry_count_ == 0) {
-    // Flush out all log entries
-    flushLogBuffer();
-    sendLogRequest(/* ondone */ true);
-    return false;
+    return true;
   }
-  return true;
+  // Flush out all log entries
+  flushLogBuffer();
+  sendLogRequest(/* ondone */ true);
+  return false;
 }
 
 void LoggingRootContext::onTick() {
@@ -102,16 +108,54 @@ void LoggingRootContext::onTick() {
 void LoggingRootContext::addLogEntry(LoggingStreamContext *stream) {
   log_writer_.StartObject();
   // Add log labels
+  // Workload labels
+  std::string source_address, destination_address;
+  getValue({"source", "address"}, &source_address);
+  getValue({"destination", "address"}, &destination_address);
   addStringLabel(log_writer_, "source_name", stream->sourceName());
   addStringLabel(log_writer_, "source_namespace", stream->sourceNamespace());
   addStringLabel(log_writer_, "source_workload", stream->sourceWorkloadName());
+  addStringLabel(log_writer_, "source_address", source_address);
   addStringLabel(log_writer_, "destination_name", stream->destinationName());
   addStringLabel(log_writer_, "destination_namespace", stream->destinationNamespace());
   addStringLabel(log_writer_, "destination_workload", stream->destinationWorkloadName());
+  addStringLabel(log_writer_, "destination_address", destination_address);
 
-  // addNumericLabel(log_writer_, "latency", stream->duration());
-  // addStringLabel(log_writer_, "destinationService",
-  //                stream->destinationServiceHost());
+  // Service labels
+  std::string destination_service_name;
+  std::string destination_service_host;
+  stream->destinationService(&destination_service_host, &destination_service_name);
+  addStringLabel(log_writer_, "destination_service_name", destination_service_name);
+  addStringLabel(log_writer_, "destination_service_host", destination_service_host);
+
+  // latency and timestamp
+  int64_t timestamp;
+  int64_t duration;
+  getValue({"request", "time"}, &timestamp);
+  getValue({"request", "duration"}, &duration);
+  addIntegerLabel(log_writer_, "timestamp", timestamp);
+  addNumericLabel(log_writer_, "latency", duration / 1000000);
+
+  // request labels
+  std::string url_path, url_host, request_id, referer, user_agent;
+  int64_t response_code;
+  getValue({"request", "url_path"}, &url_path);
+  getValue({"request", "id"}, &request_id);
+  getValue({"request", "host"}, &url_host);
+  getValue({"response", "code"}, &response_code);
+  getValue({"request", "referer"}, &referer);
+  getValue({"request", "user_agent"}, &user_agent);
+  addStringLabel(log_writer_, "url_path", url_path);
+  addStringLabel(log_writer_, "response_flag", stream->responseFlag());
+  addStringLabel(log_writer_, "source_principal", stream->sourcePrincipal());
+  addStringLabel(log_writer_, "destination_principal", stream->destinationPrincipal());
+  addStringLabel(log_writer_, "request_protocol", stream->requestProtocol());
+  addIntegerLabel(log_writer_, "response_code", response_code);
+  addStringLabel(log_writer_, "referer", referer);
+  addStringLabel(log_writer_, "user_agent", user_agent);
+  addStringLabel(log_writer_, "request_id", request_id);
+  addStringLabel(log_writer_, "url_host", url_host);
+
   log_writer_.EndObject();
   log_entry_count_ += 1;
   if (log_entry_count_ >= 500) {

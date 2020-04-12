@@ -40,7 +40,7 @@ func (o *OpaServer) Run(p *framework.Params) error {
 	}
 
 	// Run Opa Server with given rule file
-	opaServerCmd := fmt.Sprintf("%v run --server %v", opaPath, o.RuleFilePath)
+	opaServerCmd := fmt.Sprintf("%v run --server --log-level debug %v", opaPath, o.RuleFilePath)
 	fmt.Printf("start opa server: %v", opaServerCmd)
 	opaCmd := exec.Command("bash", "-c", opaServerCmd)
 	opaCmd.Stderr = os.Stderr
